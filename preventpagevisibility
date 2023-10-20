@@ -1,0 +1,74 @@
+// ==UserScript==
+// @name         preventpagevisibilitytest1
+// @version      0.1
+// @author       rakazzt
+// @match       *://*/*
+// @run-at      document-start
+// @grant        none
+// ==/UserScript==
+
+class PreventPageVisibility {
+  constructor(config) {
+    this.config = {
+      eventsToBlock: [],
+      alwaysVisible: true,
+      preventDefaults: true,
+      stopPropagation: true,
+      stopImmediatePropagation: true,
+      customEventHandlers: {},
+      visibilityProperties: {
+        visibilityState: 'visible',
+        hidden: false,
+        mozHidden: false,
+        webkitHidden: false,
+        webkitVisibilityState: 'visible',
+      },
+      ...config,
+    };
+
+    this.setupEventListeners();
+    this.modifyVisibilityProperties();
+  }
+
+  setupEventListeners() {
+    this.config.eventsToBlock.forEach((event_name) => {
+      document.addEventListener(event_name, (event) => {
+        if (this.config.preventDefaults) event.preventDefault();
+        if (this.config.stopPropagation) event.stopPropagation();
+        if (this.config.stopImmediatePropagation) event.stopImmediatePropagation();
+        if (this.config.customEventHandlers[event_name]) this.config.customEventHandlers[event_name](event);
+      }, true);
+
+      window.addEventListener(event_name, (event) => {
+        if (this.config.preventDefaults) event.preventDefault();
+        if (this.config.stopPropagation) event.stopPropagation();
+        if (this.config.stopImmediatePropagation) event.stopImmediatePropagation();
+        if (this.config.customEventHandlers[event_name]) this.config.customEventHandlers[event_name](event);
+      }, true);
+    });
+  }
+
+  modifyVisibilityProperties() {
+    if (this.config.alwaysVisible) {
+      for (const property in this.config.visibilityProperties) {
+        Object.defineProperty(document, property, {
+          value: this.config.visibilityProperties[property],
+        });
+      }
+    }
+  }
+}
+
+// Example usage:
+const preventPageVisibility = new PreventPageVisibility({
+  eventsToBlock: ["visibilitychange", "webkitvisibilitychange", "mozvisibilitychange"],
+  alwaysVisible: true,
+  preventDefaults: true,
+  stopPropagation: true,
+  stopImmediatePropagation: true,
+  customEventHandlers: {
+    "visibilitychange": (event) => {
+      // Custom handling for visibilitychange event
+    },
+  },
+});
